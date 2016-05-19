@@ -40,15 +40,20 @@
                 <li>Рендеринг на клиенте</li>
                 <li>Нет загружается весь слой целиком</li>
                 <li>Прямой доступ к геометрии и атрибутике</li>
+                <li>Отрисовка слоёв с большим количеством объектов<sup>*</sup></li>
+                <li>Адресация тайлов не отличается от адресации растровых тайлов<sup>**</sup></li>
               </ul>
+              <hr>
+              <p><sup>*</sup> В данном примере <strong>22000</strong> полигонов, размер GeoJSON - <strong>116</strong> MB</p>
+              <p><sup>**</sup> http://opendata25.primorsky.ru/ngw/api/resource/157/{z}/{x}/{y}.mvt</p>
             </header>
-            
+
             <!-- Maps -->
             <section>
               <h2><span class="symbol"><img src="images/leaflet.svg" alt="" /></span>Leaflet</h2>
               <div id="leaflet-map" class="map"></div>
             </section>
-            
+
             <div>&nbsp;</div>
 
             <section>
@@ -210,17 +215,28 @@
         row:'<tr><th>{key}</th><td>{value}</td></tr>'
     };
     var shopPopup = function(e) {
-      var feature = e.feature;
-      var body = '';
-      if (feature) {
+        var feature = e.feature;
+        var body = '';
+        if (feature) {
         jQuery.each(feature.properties, function(key, value) {
-          body += L.Util.template(options.row, {key: key, value: value});
+            if (jQuery.inArray(key, ['PERIMETER', 'AREA', 'NAME_CAT',
+                                     'FR_NAME', 'FRD_NAME', 'U_NAME']) > -1) {
+                alias = {
+                    'PERIMETER': 'ПЕРИМЕТР',
+                    'AREA': 'ПЛОЩАДЬ',
+                    'NAME_CAT': 'КАТЕГОРИЯ',
+                    'FR_NAME': 'ЛЕСНИЧЕСТВО',
+                    'FRD_NAME': 'УЧАСТКОВОЕ ЛЕСНИЧЕСТВО',
+                    'U_NAME': 'АРЕНДАТОР'
+                }[key];
+                body += L.Util.template(options.row, {key: alias, value: value});
+            }
         });
         var popupContent = L.Util.template(options.table, {body: body});
         var popup = L.popup()
-          .setLatLng(e.latlng)
-          .setContent(popupContent)
-          .openOn(feature.map);
+            .setLatLng(e.latlng)
+            .setContent(popupContent)
+            .openOn(feature.map);
       }
     };
 
@@ -258,7 +274,6 @@
         },
         style: leaflet_style
     }).addTo(leaflet_map)
-
 
     </script>
 
